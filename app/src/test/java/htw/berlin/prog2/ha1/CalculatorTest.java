@@ -90,5 +90,52 @@ class CalculatorTest {
 
 
     //TODO hier weitere Tests erstellen
-}
+    @Test
+    @DisplayName("should correctly toggle the sign of a number")
+    void testToggleSign() {
+        Calculator calc = new Calculator();
 
+        calc.pressDigitKey(5);
+        calc.pressNegativeKey();
+
+        String expected = "-5";
+        String actual = calc.readScreen();
+        assertEquals(expected, actual);
+
+        // Zurück zu positiv
+        calc.pressNegativeKey();
+        expected = "5";
+        actual = calc.readScreen();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @DisplayName("should handle chained binary operations correctly")
+    void testChainedOperations() {
+        Calculator calc = new Calculator();
+
+        calc.pressDigitKey(5);
+        calc.pressBinaryOperationKey("+");
+        calc.pressDigitKey(3);
+        calc.pressBinaryOperationKey("-");  // Sollte 8 berechnen und anzeigen
+
+        String expected = "8";
+        String actual = calc.readScreen();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @DisplayName("should do nothing when equals is pressed without a previous operation")
+    void testEqualsWithoutOperation() {
+        Calculator calc = new Calculator();
+
+        calc.pressDigitKey(5);
+        calc.pressEqualsKey();  // Sollte keine Exception werfen
+
+        String expected = "5";
+        String actual = calc.readScreen();
+
+        assertEquals(expected, actual);
+    }
+} 
