@@ -60,7 +60,39 @@ public class Calculator {
      * @param operation "+" für Addition, "-" für Substraktion, "x" für Multiplikation, "/" für Division
      */
     public void pressBinaryOperationKey(String operation)  {
-        latestValue = Double.parseDouble(screen);
+        double currentValue = Double.parseDouble(screen);
+
+        // Wenn bereits eine Operation vorliegt, führe diese zuerst aus
+        if (!latestOperation.isEmpty() && !latestOperation.equals("+") &&
+                !latestOperation.equals("-") && !latestOperation.equals("x") &&
+                !latestOperation.equals("/")) {
+            pressUnaryOperationKey(latestOperation);
+            currentValue = Double.parseDouble(screen);
+        } else if (!latestOperation.isEmpty()) {
+            // Berechne das Zwischenergebnis der vorherigen binären Operation
+            try {
+                double result = switch(latestOperation) {
+                    case "+" -> latestValue + currentValue;
+                    case "-" -> latestValue - currentValue;
+                    case "x" -> latestValue * currentValue;
+                    case "/" -> {
+                        if (currentValue == 0) throw new ArithmeticException("Division by zero");
+                        yield latestValue / currentValue;
+                    }
+                    default -> currentValue;
+                };
+                screen = Double.toString(result);
+                if (screen.endsWith(".0")) screen = screen.substring(0, screen.length()-2);
+                if (screen.contains(".") && screen.length() > 11) screen = screen.substring(0, 10);
+                currentValue = result;
+            } catch (ArithmeticException e) {
+                screen = "Error";
+                latestOperation = "";
+                return;
+            }
+        }
+
+        latestValue = currentValue;
         latestOperation = operation;
     }
 
@@ -118,16 +150,27 @@ public class Calculator {
      * und das Ergebnis direkt angezeigt.
      */
     public void pressEqualsKey() {
-        var result = switch(latestOperation) {
-            case "+" -> latestValue + Double.parseDouble(screen);
-            case "-" -> latestValue - Double.parseDouble(screen);
-            case "x" -> latestValue * Double.parseDouble(screen);
-            case "/" -> latestValue / Double.parseDouble(screen);
-            default -> throw new IllegalArgumentException();
-        };
-        screen = Double.toString(result);
-        if(screen.equals("Infinity")) screen = "Error";
-        if(screen.endsWith(".0")) screen = screen.substring(0,screen.length()-2);
-        if(screen.contains(".") && screen.length() > 11) screen = screen.substring(0, 10);
+        // Tue nichts, wenn keine Operation definiert wurde
+        if (latestOperation.isEmpty() || (!latestOperation.equals("+") &&
+                !latestOperation.equals("-") && !latestOperation.equals("x") &&
+                !latestOperation.equals("/"))) {
+            return;
+        }
+
+        try {
+            var result = switch(latestOperation) {
+                case "+" -> latestValue + Double.parseDouble(screen);
+                case "-" -> latestValue - Double.parseDouble(screen);
+                case "x" -> latestValue * Double.parseDouble(screen);
+                case "/" -> latestValue / Double.parseDouble(screen);
+                default -> Double.parseDouble(screen); // Sollte nie erreicht werden
+            };
+            screen = Double.toString(result);
+            if(screen.equals("Infinity")) screen = "Error";
+            if(screen.endsWith(".0")) screen = screen.substring(0,screen.length()-2);
+            if(screen.contains(".") && screen.length() > 11) screen = screen.substring(0, 10);
+        } catch (Exception e) {
+            screen = "Error";
+        }
     }
 }
